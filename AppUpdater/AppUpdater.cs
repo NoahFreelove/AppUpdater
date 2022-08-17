@@ -8,6 +8,8 @@ public static class AppUpdater
     public static string buildID;
     public static string key; // Optional, only required if set in build settings
     public static string branch;
+
+    public static string relativeDownloadPath = "/downloads/file"; // Path to download and unzip the build before merge
     
     public static bool updateAvailable;
     
@@ -24,6 +26,9 @@ public static class AppUpdater
     public static void Main()
     {
         Init("dfc9XpALPQ9XLlmIvMTU", "notBuildID", "thisisakey", "master");
-        Updater.CheckForUpdates();
+        if (Updater.CheckForUpdates())
+        {
+            Updater.StartUpdate();
+        }
     }
 }

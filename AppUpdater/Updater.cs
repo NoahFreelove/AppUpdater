@@ -8,6 +8,9 @@ public static class Updater
     private static bool isUpdateReady;
     private static bool downloadingUpdate;
     private static float downloadProgress;
+    
+    private static HttpClient client = new HttpClient();
+
     public static bool CheckForUpdates(bool updateIfAvailable = false)
     {
         AppUpdater.updateAvailable = IsUpdateAvailable();
@@ -31,12 +34,37 @@ public static class Updater
             return;
         }
         DownloadUpdate();
+    }
 
+    private static string GetBuildLink()
+    {
+        var url = "https://app-updater-api.herokuapp.com/apps/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
+        return makeHttpGETRequest(url);
     }
 
     private static void DownloadUpdate()
     {
-        //
+        downloadProgress = 0;
+        Console.WriteLine("Start Update");
+        // Create new thread to download update
+        DownloadFileAsync(GetBuildLink(), AppUpdater.relativeDownloadPath);
+        downloadingUpdate = true;
+    }
+
+    public static async void DownloadFileAsync(string uri
+        , string outputPath)
+    {
+        Uri uriResult;
+
+        if (!Uri.TryCreate(uri, UriKind.Absolute, out uriResult))
+            throw new InvalidOperationException("URI is invalid.");
+
+        if (!File.Exists(outputPath))
+            throw new FileNotFoundException("File not found."
+                , nameof(outputPath));
+
+        byte[] fileBytes = await client.GetByteArrayAsync(uri);
+        File.WriteAllBytes(outputPath, fileBytes);
     }
 
     private static void Update()
@@ -50,9 +78,21 @@ public static class Updater
             return false;
 
         // Send GET request to the server
-        var url = "http://localhost:3000/activebuild/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
+        var url = "https://app-updater-api.herokuapp.com/activebuild/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
+
+        var res = makeHttpGETRequest(url);
         
-        HttpClient client = new HttpClient();
+        if (res != "Error")
+        { 
+            return res != AppUpdater.buildID;
+        }
+        
+        return false;
+    }
+
+
+    private static string makeHttpGETRequest(string url)
+    {
         client.BaseAddress = new Uri(url);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -60,9 +100,9 @@ public static class Updater
         HttpResponseMessage responseMessage = client.GetAsync(url).Result;
         if (responseMessage.IsSuccessStatusCode)
         { 
-            return responseMessage.Content.ReadAsStringAsync().Result != AppUpdater.buildID;
+            return responseMessage.Content.ReadAsStringAsync().Result;
         }
         
-        return false;
+        return "Error";
     }
 }
