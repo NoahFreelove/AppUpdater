@@ -2,8 +2,8 @@
 
 public static class Downloader
 {
-    public static DownloadCompletedCallback downloadCallback;
-    private static HttpClient downloadClient;
+    public static DownloadCompletedCallback DownloadCallback;
+    private static readonly HttpClient DownloadClient = new();
     
     public static void DownloadUpdate(bool updateAfterDownload = false)
     {
@@ -22,7 +22,7 @@ public static class Downloader
     {
         if (!Uri.TryCreate(uri, UriKind.Absolute, out _))
             throw new InvalidOperationException("URI is invalid.");
-        var fileBytes = await downloadClient.GetByteArrayAsync(uri);
+        var fileBytes = await DownloadClient.GetByteArrayAsync(uri);
         
         AppUpdater.RelativeDownloadPath = FormatUrl(AppUpdater.RelativeDownloadPath);
 
@@ -42,7 +42,7 @@ public static class Downloader
         DownloadingUpdate = false;
         Updater.isUpdateReady = true;
 
-        downloadCallback?.Invoke(filepath);
+        DownloadCallback?.Invoke(filepath);
     }
     
     private static string FormatUrl(string input)
@@ -50,7 +50,7 @@ public static class Downloader
         if (input == string.Empty)
         {
             // set it to directory where the executable is
-            input = Directory.GetCurrentDirectory();
+            input = Path.GetDirectoryName(AppUpdater.exeDirectory);
             
         }
         

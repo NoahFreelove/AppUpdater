@@ -48,14 +48,16 @@ public static class Updater
 
         // Get id of current process
         var currentProcess = Process.GetCurrentProcess().Id;
-        var exePath = Process.GetProcessById(currentProcess).MainModule?.FileName;
-        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + exePath;
+        
+        
+        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + AppUpdater.exeDirectory;
         // Write to config file
         File.WriteAllText(AppUpdater.UpdaterFolderPath + "config.txt", configFile);
         Console.WriteLine("Updated config file");
         
         Console.WriteLine("Launching Updater. This will close the current process.");
-        //Process.Start(AppUpdater.UpdaterFolderPath + "updater.exe");
+        Process.Start(AppUpdater.UpdaterFolderPath + "updater.exe");
+        Process.GetCurrentProcess().Kill();
 
     }
 

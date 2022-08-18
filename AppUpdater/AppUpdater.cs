@@ -13,15 +13,17 @@ public static class AppUpdater
     
     public static string UpdaterFolderPath = string.Empty; // Path to the updater config file
     
+    public static string exeDirectory = string.Empty; // Path to the executable
     public static bool updateAvailable;
     
-    public static void Init(string appID, string buildID, string key, string branch, string UpdaterFolderPath)
+    public static void Init(string appID, string buildID, string key, string branch, string UpdaterFolderPath, string exeDirectory)
     {
         AppUpdater.appID = appID;
         AppUpdater.buildID = buildID;
         AppUpdater.key = key;
         AppUpdater.branch = branch;
         AppUpdater.UpdaterFolderPath = UpdaterFolderPath;
+        AppUpdater.exeDirectory = exeDirectory;
         hasInit = true;
     }
 }

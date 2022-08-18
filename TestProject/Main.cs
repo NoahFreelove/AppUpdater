@@ -8,7 +8,14 @@ class Test
 {
     public static void Main(string[] args)
     {
-        Init();
+        Console.WriteLine("Welcome to the AppUpdater test program");
+        string? input = Console.ReadLine();
+        if(input != null && input.Contains("quit"))
+        {
+            return;
+        }
+        
+        //Init();
         if (Updater.CheckForUpdates())
         {
             Console.WriteLine("Start Update");
