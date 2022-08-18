@@ -9,26 +9,19 @@ public static class AppUpdater
     public static string key; // Optional, only required if set in build settings
     public static string branch;
 
-    public static string relativeDownloadPath = "/downloads/file"; // Path to download and unzip the build before merge
+    public static string RelativeDownloadPath = string.Empty; // Path to download and unzip the build before merge
+    
+    public static string UpdaterFolderPath = string.Empty; // Path to the updater config file
     
     public static bool updateAvailable;
     
-    // ReSharper disable once MemberCanBePrivate.Global
-    public static void Init(string appID, string buildID, string key, string branch)
+    public static void Init(string appID, string buildID, string key, string branch, string UpdaterFolderPath)
     {
         AppUpdater.appID = appID;
         AppUpdater.buildID = buildID;
         AppUpdater.key = key;
         AppUpdater.branch = branch;
+        AppUpdater.UpdaterFolderPath = UpdaterFolderPath;
         hasInit = true;
-    }
-
-    public static void Main()
-    {
-        Init("dfc9XpALPQ9XLlmIvMTU", "notBuildID", "thisisakey", "master");
-        if (Updater.CheckForUpdates())
-        {
-            Updater.StartUpdate();
-        }
     }
 }

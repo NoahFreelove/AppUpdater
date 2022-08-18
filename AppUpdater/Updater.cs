@@ -1,23 +1,24 @@
-﻿using System.Net;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Headers;
 
 namespace AppUpdater;
 
 public static class Updater
 {
-    private static bool isUpdateReady;
-    private static bool downloadingUpdate;
-    private static float downloadProgress;
-    
-    private static HttpClient client = new HttpClient();
+    public static bool isUpdateReady;
+    private static HttpClient client = new();
 
-    public static bool CheckForUpdates(bool updateIfAvailable = false)
+    public static bool CheckForUpdates(bool downloadIfAvailable = false)
     {
+        if (!AppUpdater.hasInit)
+            return false;
+        
         AppUpdater.updateAvailable = IsUpdateAvailable();
 
-        if (updateIfAvailable && AppUpdater.updateAvailable)
+        if (downloadIfAvailable && AppUpdater.updateAvailable)
         {
-            StartUpdate();
+            Downloader.DownloadUpdate();
         }
 
         return AppUpdater.updateAvailable;
@@ -25,51 +26,37 @@ public static class Updater
 
     public static void StartUpdate()
     {
-        if(downloadingUpdate)
-            return;
-
-        if (isUpdateReady)
-        {
-            Update();
-            return;
-        }
-        DownloadUpdate();
-    }
-
-    private static string GetBuildLink()
-    {
-        var url = "https://app-updater-api.herokuapp.com/apps/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
-        return makeHttpGETRequest(url);
-    }
-
-    private static void DownloadUpdate()
-    {
-        downloadProgress = 0;
-        Console.WriteLine("Start Update");
-        // Create new thread to download update
-        DownloadFileAsync(GetBuildLink(), AppUpdater.relativeDownloadPath);
-        downloadingUpdate = true;
-    }
-
-    public static async void DownloadFileAsync(string uri
-        , string outputPath)
-    {
-        Uri uriResult;
-
-        if (!Uri.TryCreate(uri, UriKind.Absolute, out uriResult))
-            throw new InvalidOperationException("URI is invalid.");
-
-        if (!File.Exists(outputPath))
-            throw new FileNotFoundException("File not found."
-                , nameof(outputPath));
-
-        byte[] fileBytes = await client.GetByteArrayAsync(uri);
-        File.WriteAllBytes(outputPath, fileBytes);
+        if (!isUpdateReady || Downloader.DownloadingUpdate || !AppUpdater.hasInit) return;
+        Update();
     }
 
     private static void Update()
     {
+        Console.WriteLine("Check for path existence: " + AppUpdater.RelativeDownloadPath);
         
+        if (!File.Exists(AppUpdater.RelativeDownloadPath + "build.zip"))
+            return;
+        Console.WriteLine("unzipping files");
+        if(Directory.Exists(AppUpdater.RelativeDownloadPath + "build"))
+            Directory.Delete(AppUpdater.RelativeDownloadPath + "build", true);
+        
+        System.IO.Compression.ZipFile.ExtractToDirectory(AppUpdater.RelativeDownloadPath + "build.zip", AppUpdater.RelativeDownloadPath + "build");
+        
+        if(File.Exists(AppUpdater.RelativeDownloadPath + "build.zip"))
+            File.Delete(AppUpdater.RelativeDownloadPath + "build.zip");
+        Debug.WriteLine("Removing zip file");
+
+        // Get id of current process
+        var currentProcess = Process.GetCurrentProcess().Id;
+        var exePath = Process.GetProcessById(currentProcess).MainModule?.FileName;
+        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + exePath;
+        // Write to config file
+        File.WriteAllText(AppUpdater.UpdaterFolderPath + "config.txt", configFile);
+        Console.WriteLine("Updated config file");
+        
+        Console.WriteLine("Launching Updater. This will close the current process.");
+        //Process.Start(AppUpdater.UpdaterFolderPath + "updater.exe");
+
     }
 
     private static bool IsUpdateAvailable()
@@ -80,7 +67,7 @@ public static class Updater
         // Send GET request to the server
         var url = "https://app-updater-api.herokuapp.com/activebuild/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
 
-        var res = makeHttpGETRequest(url);
+        var res = MakeHttpGetRequest(url);
         
         if (res != "Error")
         { 
@@ -90,9 +77,9 @@ public static class Updater
         return false;
     }
 
-
-    private static string makeHttpGETRequest(string url)
+    public static string MakeHttpGetRequest(string url)
     {
+        client = new HttpClient();
         client.BaseAddress = new Uri(url);
         client.DefaultRequestHeaders.Accept.Clear();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -102,7 +89,8 @@ public static class Updater
         { 
             return responseMessage.Content.ReadAsStringAsync().Result;
         }
-        
         return "Error";
     }
 }
+
+public delegate void DownloadCompletedCallback(string downloadedPath);
