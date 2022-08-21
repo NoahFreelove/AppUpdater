@@ -50,7 +50,7 @@ public static class Downloader
         if (input == string.Empty)
         {
             // set it to directory where the executable is
-            input = Path.GetDirectoryName(AppUpdater.exeDirectory);
+            input = Path.GetDirectoryName(AppUpdater.appExePath);
             
         }
         

@@ -16,6 +16,15 @@ public static class Updater
         
         AppUpdater.updateAvailable = IsUpdateAvailable();
 
+        if (AppUpdater.updateAvailable)
+        {
+            Console.WriteLine("Update Available");
+        }
+        else
+        {
+            Console.WriteLine("Up to date");
+        }
+
         if (downloadIfAvailable && AppUpdater.updateAvailable)
         {
             Downloader.DownloadUpdate();
@@ -50,7 +59,7 @@ public static class Updater
         var currentProcess = Process.GetCurrentProcess().Id;
         
         
-        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + AppUpdater.exeDirectory;
+        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + AppUpdater.appExePath;
         // Write to config file
         File.WriteAllText(AppUpdater.UpdaterFolderPath + "config.txt", configFile);
         Console.WriteLine("Updated config file");
@@ -73,7 +82,7 @@ public static class Updater
         
         if (res != "Error")
         { 
-            return res != AppUpdater.buildID;
+            return res != AppUpdater.currentBuildId;
         }
         
         return false;
