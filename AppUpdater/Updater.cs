@@ -13,17 +13,10 @@ public static class Updater
     {
         if (!AppUpdater.hasInit)
             return false;
-        
-        AppUpdater.updateAvailable = IsUpdateAvailable();
 
-        if (AppUpdater.updateAvailable)
-        {
-            Console.WriteLine("Update Available");
-        }
-        else
-        {
-            Console.WriteLine("Up to date");
-        }
+        AppUpdater.updateAvailable = File.Exists(AppUpdater.RelativeDownloadPath + "build.zip") || IsUpdateAvailable();
+
+        Console.WriteLine(AppUpdater.updateAvailable ? "Update Available" : "Up to date");
 
         if (downloadIfAvailable && AppUpdater.updateAvailable)
         {
@@ -35,7 +28,7 @@ public static class Updater
 
     public static void StartUpdate()
     {
-        if (!isUpdateReady || Downloader.DownloadingUpdate || !AppUpdater.hasInit) return;
+        if (!isUpdateReady || Downloader.IsDownloadingUpdate || !AppUpdater.hasInit) return;
         Update();
     }
 
