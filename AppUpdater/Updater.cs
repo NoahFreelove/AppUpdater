@@ -11,24 +11,24 @@ public static class Updater
 
     public static bool CheckForUpdates(bool downloadIfAvailable = false)
     {
-        if (!AppUpdater.hasInit)
+        if (!AppUpdater.HasInit)
             return false;
 
-        AppUpdater.updateAvailable = File.Exists(AppUpdater.RelativeDownloadPath + "build.zip") || IsUpdateAvailable();
+        AppUpdater.IsUpdateAvailable = File.Exists(AppUpdater.RelativeDownloadPath + "build.zip") || IsUpdateAvailable();
 
-        Console.WriteLine(AppUpdater.updateAvailable ? "Update Available" : "Up to date");
+        Console.WriteLine(AppUpdater.IsUpdateAvailable ? "Update Available" : "Up to date");
 
-        if (downloadIfAvailable && AppUpdater.updateAvailable)
+        if (downloadIfAvailable && AppUpdater.IsUpdateAvailable)
         {
             Downloader.DownloadUpdate();
         }
 
-        return AppUpdater.updateAvailable;
+        return AppUpdater.IsUpdateAvailable;
     }
 
     public static void StartUpdate()
     {
-        if (!isUpdateReady || Downloader.IsDownloadingUpdate || !AppUpdater.hasInit) return;
+        if (!isUpdateReady || Downloader.IsDownloadingUpdate || !AppUpdater.HasInit) return;
         Update();
     }
 
@@ -52,7 +52,7 @@ public static class Updater
         var currentProcess = Process.GetCurrentProcess().Id;
         
         
-        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + AppUpdater.appExePath;
+        string configFile = AppUpdater.RelativeDownloadPath + "build\n" + currentProcess + "\n" + AppUpdater.AppExePath;
         // Write to config file
         File.WriteAllText(AppUpdater.UpdaterFolderPath + "config.txt", configFile);
         Console.WriteLine("Updated config file");
@@ -65,17 +65,17 @@ public static class Updater
 
     private static bool IsUpdateAvailable()
     {
-        if(!AppUpdater.hasInit)
+        if(!AppUpdater.HasInit)
             return false;
 
         // Send GET request to the server
-        var url = "https://app-updater-api.herokuapp.com/activebuild/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
+        var url = "https://app-updater-api.herokuapp.com/activebuild/?appId=" + AppUpdater.AppId + "&branch=" + AppUpdater.Branch + "&key=" + AppUpdater.Key;
 
         var res = MakeHttpGetRequest(url);
         
         if (res != "Error")
         { 
-            return res != AppUpdater.currentBuildId;
+            return res != AppUpdater.CurrentBuildId;
         }
         
         return false;

@@ -8,7 +8,7 @@ public static class Downloader
 
     public static void DownloadUpdate(bool updateAfterDownload = false)
     {
-        if(!AppUpdater.hasInit)
+        if(!AppUpdater.HasInit)
             return;
 
         if (File.Exists(AppUpdater.RelativeDownloadPath + "build.zip"))
@@ -70,7 +70,7 @@ public static class Downloader
         if (input == string.Empty)
         {
             // set it to directory where the executable is
-            input = Path.GetDirectoryName(AppUpdater.appExePath);
+            input = Path.GetDirectoryName(AppUpdater.AppExePath);
             
         }
         
@@ -83,7 +83,7 @@ public static class Downloader
     
     private static string GetBuildLink()
     {
-        var url = "https://app-updater-api.herokuapp.com/apps/?appId=" + AppUpdater.appID + "&branch=" + AppUpdater.branch + "&key=" + AppUpdater.key;
+        var url = "https://app-updater-api.herokuapp.com/apps/?appId=" + AppUpdater.AppId + "&branch=" + AppUpdater.Branch + "&key=" + AppUpdater.Key;
         return Updater.MakeHttpGetRequest(url);
     }
 

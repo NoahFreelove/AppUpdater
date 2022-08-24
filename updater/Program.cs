@@ -1,45 +1,96 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 
-Console.WriteLine("----App Updater----");
-Console.WriteLine("Fetching Config File");
+[DllImport("kernel32.dll")]
+static extern IntPtr GetConsoleWindow();
+
+[DllImport("user32.dll")]
+static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+ShowWindow(GetConsoleWindow(), 0);
+
+ResetLog();
+WriteLog("----App Updater----");
+WriteLog("Fetching Config File");
+
+var buildFolderPath = string.Empty;
+var pId = string.Empty;
+var exePath = string.Empty;
 
 try
 {
-    var configFile = Directory.GetFiles(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)+"/","config.txt" )[0];
+    var configFile = Directory.GetFiles(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "/",
+        "config.txt")[0];
     var lines = File.ReadAllLines(configFile);
-    var buildFolderPath = lines[0];
-    var pId = lines[1];
-    var exePath = lines[2];
+    buildFolderPath = lines[0];
+    pId = lines[1];
+    exePath = lines[2];
+}
+catch
+{
+    WriteLog("Error loading config file. Cannot proceed until the config file is fixed.");
+    Environment.Exit(1);
+}
 
+try
+{
     Process.GetProcessById(int.Parse(pId)).Kill();
-    
-    Console.WriteLine("Updating Files");
-    foreach (var file in Directory.GetFiles(buildFolderPath+"/"))
+}
+catch
+{
+    WriteLog("Process id: " + pId + " not found. Could not close app.\nMaybe it's already closed?");
+}
+
+WriteLog("Moving Files From Extracted ");
+foreach (var file in new DirectoryInfo(buildFolderPath).GetFiles())
+{
+    try
     {
-        try
-        {
-            File.Move(file, Path.GetFileName(file), true);
-        }
-        catch
-        {
-            // ignore
-        }
+        var parentDir = file.FullName.Substring(0, file.FullName.LastIndexOf("\\", StringComparison.Ordinal)-5); // -5 to remove the "build" folder
+        File.Move(file.FullName, parentDir + file.Name);
     }
+    catch
+    {
+        WriteLog("Error moving file: " + file);
+    }
+}
+
+try
+{
     Directory.Delete(buildFolderPath,true);
+}
+catch
+{
+    WriteLog("Could not delete build folder: " + buildFolderPath + "\nPossibly already deleted?");
+}
 
-    Console.WriteLine("Starting App");
+WriteLog("Attempting To Start App");
 
+try
+{
     var psi = new ProcessStartInfo(exePath)
     {
         UseShellExecute = true
     };
     Process.Start(psi);
     Process.GetCurrentProcess().Kill();
-
 }
-catch(Exception e)
+catch
 {
-    Console.WriteLine("error occured: " + e + "\nExiting...");
-    Console.WriteLine(e.Message);
-    Console.ReadLine();
+    WriteLog("Could not start app: " + exePath + "\nLikely the file does not exist");
+}
+    
+
+void WriteLog(string message)
+{
+    File.AppendAllText("log.txt", message + "\n");
+}
+
+void ResetLog()
+{
+    // Check if log file exists
+    if (File.Exists("log.txt"))
+    {
+        // Delete log file
+        File.Delete("log.txt");
+    }
 }
