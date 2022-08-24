@@ -91,8 +91,8 @@ public static class Downloader
     {
         var result = Updater.MakeHttpGetRequest("https://app-updater-api.herokuapp.com/");
 
-        Console.WriteLine(result);
-        return true;
+        
+        return result != null;
     }
 
 }
