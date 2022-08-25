@@ -29,6 +29,7 @@ public static class Updater
     public static void StartUpdate()
     {
         if (!isUpdateReady || Downloader.IsDownloadingUpdate || !AppUpdater.HasInit) return;
+        Console.WriteLine("Start Update");
         Update();
     }
 
@@ -58,8 +59,8 @@ public static class Updater
         Console.WriteLine("Updated config file");
         
         Console.WriteLine("Launching Updater. This will close the current process.");
-        Process.Start(AppUpdater.UpdaterFolderPath + "updater.exe");
-        Process.GetCurrentProcess().Kill();
+        Process.Start(AppUpdater.UpdaterFolderPath + "/updater.exe");
+        //Process.GetCurrentProcess().Kill();
 
     }
 

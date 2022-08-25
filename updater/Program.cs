@@ -1,15 +1,17 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 
-[DllImport("kernel32.dll")]
+/*[DllImport("kernel32.dll")]
 static extern IntPtr GetConsoleWindow();
 
 [DllImport("user32.dll")]
 static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-ShowWindow(GetConsoleWindow(), 0);
+ShowWindow(GetConsoleWindow(), 0);*/
 
 ResetLog();
 WriteLog("----App Updater----");
+WriteLog(DateTime.Now.ToString(CultureInfo.InvariantCulture));
 WriteLog("Fetching Config File");
 
 var buildFolderPath = string.Empty;
@@ -37,10 +39,10 @@ try
 }
 catch
 {
-    WriteLog("Process id: " + pId + " not found. Could not close app.\nMaybe it's already closed?");
+    WriteLog("Process id: " + pId + " not found. App is already closed or does not exist.\nThe updater library automatically closes the app so this shouldn't be anything to worry about.");
 }
 
-WriteLog("Moving Files From Extracted ");
+WriteLog("Moving Files From Extracted Zip Folder");
 foreach (var file in new DirectoryInfo(buildFolderPath).GetFiles())
 {
     try
@@ -78,19 +80,21 @@ catch
 {
     WriteLog("Could not start app: " + exePath + "\nLikely the file does not exist");
 }
+
+Environment.Exit(0);
     
 
 void WriteLog(string message)
 {
-    File.AppendAllText("log.txt", message + "\n");
+    File.AppendAllText("update-log.txt", message + "\n");
 }
 
 void ResetLog()
 {
     // Check if log file exists
-    if (File.Exists("log.txt"))
+    if (File.Exists("update-log.txt"))
     {
         // Delete log file
-        File.Delete("log.txt");
+        File.Delete("update-log.txt");
     }
 }
